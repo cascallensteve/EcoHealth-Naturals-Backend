@@ -1,0 +1,5 @@
+$env:EMAIL_HOST = smtp.gmail.com
+$env:EMAIL_PORT = 587
+$env:EMAIL_HOST_USER = cascallensteve@gmail.com
+$env:EMAIL_HOST_PASSWORD = cytaiyutdfposovi  # app password, NO SPACES
+$env:DEFAULT_FROM_EMAIL = EcoHealth Naturals <cascallensteve@gmail.com>

@@ -1,0 +1,391 @@
+# API Endpoints and Test Data
+
+Base URL (local dev): `CSRF_TRUSTED_ORIGINS = [
+    "https://eco-health-naturals-backend.vercel.app",
+]`
+
+All JSON bodies should be sent with header:
+
+- `Content-Type: application/json`
+
+For endpoints that require authentication, also send:
+
+- `Authorization: Token <your_token_here>`
+
+---
+
+## 1. Authentication Endpoints (accounts)
+
+### 1.1 Signup
+- **URL:** `POST /api/accounts/signup/`
+- **Auth:** Not required
+
+**Request body example:**
+```json
+{
+  "username": "john_doe",
+  "email": "john@example.com",
+  "password": "MyStrongPass123!",
+  "password2": "MyStrongPass123!"
+}
+```
+
+**Successful response (201):**
+```json
+{
+  "message": "User created successfully",
+  "user": {
+    "id": 1,
+    "username": "john_doe",
+    "email": "john@example.com"
+  },
+  "token": "<token_string>"
+}
+```
+
+---
+
+### 1.2 Login
+- **URL:** `POST /api/accounts/login/`
+- **Auth:** Not required (returns token)
+
+**Request body example:**
+```json
+{
+  "email": "john@example.com",
+  "password": "MyStrongPass123!"
+}
+```
+
+**Successful response (200):**
+```json
+{
+  "message": "Login successful",
+  "user": {
+    "id": 1,
+    "username": "john_doe",
+    "email": "john@example.com"
+  },
+  "token": "<token_string>"
+}
+```
+
+Use this `token` for the protected endpoints below.
+
+---
+
+### 1.3 Logout
+- **URL:** `POST /api/accounts/logout/`
+- **Auth:** Token optional (ends session on server side)
+
+**Request body:**
+```json
+{}
+```
+
+**Successful response (200):**
+```json
+{
+  "message": "Logged out successfully"
+}
+```
+
+---
+
+## 2. Contact Endpoint
+
+### 2.1 Submit Contact Message
+- **URL:** `POST /api/contact/submit/`
+- **Auth:** Not required
+
+**Request body example:**
+```json
+{
+  "name": "Alice Smith",
+  "email": "alice@example.com",
+  "phone_number": "1234567890",
+  "main_concern": "I want to know more about EcoHealth Naturals products."
+}
+```
+
+**Successful response (201) with full serializer output:**
+```json
+{
+  "id": 1,
+  "name": "Alice Smith",
+  "email": "alice@example.com",
+  "phone_number": "1234567890",
+  "main_concern": "I want to know more about EcoHealth Naturals products.",
+  "created_at": "2025-11-16T00:00:00Z"
+}
+```
+
+(Exact timestamps and IDs will vary.)
+
+---
+
+## 3. Consultation Endpoints (protected)
+
+### 2.2 List All Contact Messages (Admin Only)
+- **URL:** `GET /api/contact/all/`
+- **Auth:** Required (admin token)
+
+**Headers:**
+```http
+Authorization: Token <admin_auth_token_here>
+Content-Type: application/json
+```
+
+**Example response (200):**
+```json
+[
+  {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com",
+    "phone_number": "1234567890",
+    "main_concern": "I want to know more about EcoHealth Naturals products.",
+    "created_at": "2025-11-15T20:29:21.275714Z"
+  }
+]
+```
+
+### 5.2 Delete a User (Admin Only)
+- **URL:** `DELETE /api/adminauths/users/<id>/delete/`
+- **Auth:** Required (admin token)
+
+**Example request:**
+
+URL:
+
+`http://127.0.0.1:8000/api/adminauths/users/7/delete/`
+
+Headers:
+
+```http
+Authorization: Token <admin_auth_token_here>
+Content-Type: application/json
+```
+
+**Example success response (204):**
+
+```json
+{
+  "message": "User account deleted successfully."
+}
+```
+
+**If user not found (404):**
+
+```json
+{
+  "detail": "User not found."
+}
+```
+
+**If admin tries to delete own account (400):**
+
+```json
+{
+  "detail": "You cannot delete your own account."
+}
+```
+
+Only authenticated staff/admin users can access this endpoint.
+
+---
+
+### 2.3 Delete a Contact Message (Admin Only)
+- **URL:** `DELETE /api/contact/<id>/delete/`
+- **Auth:** Required (admin token)
+
+**Example request:**
+
+URL:
+
+`http://127.0.0.1:8000/api/contact/1/delete/`
+
+Headers:
+
+```http
+Authorization: Token <admin_auth_token_here>
+Content-Type: application/json
+```
+
+**Example response (204):**
+
+```json
+{
+  "message": "Contact message deleted successfully."
+}
+```
+
+---
+
+## 3. Consultation Endpoints (protected)
+
+Both consultation endpoints require **TokenAuthentication** and `IsAuthenticated`.
+Include header:
+
+- `Authorization: Token <token_from_signup_or_login>`
+
+### 3.1 Create Consultation
+- **URL:** `POST /api/consultation/create/`
+- **Auth:** Required (Token)
+
+**Request body example:**
+```json
+{
+  "name": "Alice Smith",
+  "email": "alice@example.com",
+  "phone_number": "1234567890",
+  "gender": "F",
+  "age": 32,
+  "main_concern": "Digestive issues and low energy",
+  "symptoms": "Bloating after meals, fatigue, occasional headaches",
+  "duration": "3 months",
+  "additional_notes": "Tried changing diet but not much improvement",
+  "appointment_time": "2025-11-20T15:30:00Z"
+}
+```
+
+**Successful response (201):**
+```json
+{
+  "message": "Consultation submitted successfully",
+  "data": {
+    "id": 1,
+    "user": 1,
+    "name": "Alice Smith",
+    "email": "alice@example.com",
+    "phone_number": "1234567890",
+    "gender": "F",
+    "age": 32,
+    "main_concern": "Digestive issues and low energy",
+    "symptoms": "Bloating after meals, fatigue, occasional headaches",
+    "duration": "3 months",
+    "additional_notes": "Tried changing diet but not much improvement",
+    "appointment_time": "2025-11-20T15:30:00Z",
+    "is_resolved": false,
+    "created_at": "2025-11-16T00:00:00Z",
+    "updated_at": "2025-11-16T00:00:00Z"
+  }
+}
+```
+
+---
+
+### 3.2 List My Consultations
+- **URL:** `GET /api/consultation/my-consultations/`
+- **Auth:** Required (Token)
+
+**Request body:** none
+
+**Successful response (200) example:**
+```json
+[
+  {
+    "id": 1,
+    "user": 1,
+    "name": "Alice Smith",
+    "email": "alice@example.com",
+    "phone_number": "1234567890",
+    "gender": "F",
+    "age": 32,
+    "main_concern": "Digestive issues and low energy",
+    "symptoms": "Bloating after meals, fatigue, occasional headaches",
+    "duration": "3 months",
+    "additional_notes": "Tried changing diet but not much improvement",
+    "appointment_time": "2025-11-20T15:30:00Z",
+    "is_resolved": false,
+    "created_at": "2025-11-16T00:00:00Z",
+    "updated_at": "2025-11-16T00:00:00Z"
+  }
+]
+```
+
+
+---
+
+## 4. Admin Panel
+
+- **URL:** `GET /admin/`
+- **Auth:** Django admin login (not token-based).
+
+You can use these examples directly in Postman/Thunder Client to test all endpoints.
+
+---
+
+## 5. Admin User Management Endpoints (adminauths)
+
+### 5.1 List All Users (Admin Only)
+- **URL:** `GET /api/adminauths/users/`
+- **Auth:** Required (admin token)
+
+**Headers:**
+```http
+Authorization: Token <admin_auth_token_here>
+Content-Type: application/json
+```
+
+**Example response (200):**
+```json
+[
+  {
+    "id": 7,
+    "username": "superadmin",
+    "email": "rolinat803@gyknife.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2025-11-15T22:28:10.043178Z"
+  },
+  {
+    "id": 6,
+    "username": "admins",
+    "email": "jodiror194@gyknife.com",
+    "is_staff": true,
+    "is_active": false,
+    "date_joined": "2025-11-15T22:17:15.648337Z"
+  },
+  {
+    "id": 5,
+    "username": "Mrright",
+    "email": "rightjane@example.com",
+    "is_staff": true,
+    "is_active": false,
+    "date_joined": "2025-11-15T21:40:20.854359Z"
+  },
+  {
+    "id": 4,
+    "username": "admin_janesd",
+    "email": "admin.jane@example.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2025-11-15T21:18:45.549559Z"
+  },
+  {
+    "id": 3,
+    "username": "admin_janes",
+    "email": "admin.jane@example.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2025-11-15T21:18:33.551532Z"
+  },
+  {
+    "id": 2,
+    "username": "admin_jane",
+    "email": "admin.jane@example.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2025-11-15T21:16:35.782559Z"
+  },
+  {
+    "id": 1,
+    "username": "Cascallen",
+    "email": "cascallensteve@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2025-11-15T20:12:39.202267Z"
+  }
+]
+```
